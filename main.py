@@ -87,9 +87,13 @@ class Logpoint:
         return response2.text[start + 27:start + 63]
 
     def get_new_incidents(self, last_incident):
-        payload = {'kind': 'newer', 'id': last_incident}
-        incidents = self.get_uri(self.hostname + '/uincidents', payload)
-        return incidents
+        if last_incident is False:
+            incidents = self.get_uri(self.hostname + '/uincidents', {})
+            return incidents
+        else:
+            payload = {'kind': 'newer', 'id': last_incident}
+            incidents = self.get_uri(self.hostname + '/uincidents', payload)
+            return incidents
 
     def get_uri(self, uri, payload):
         header = {'X-Requested-With': 'XMLHttpRequest',
@@ -116,7 +120,7 @@ class Logpoint:
             lastRun = demisto.getLastRun()
             lastAlert = lastRun['alert']
         except KeyError:
-            lastAlert = '5c6c1fa8371a8e59dc7a676d'
+            lastAlert = False
 
         alerts = logpoint.get_new_incidents(lastAlert)
 
@@ -124,7 +128,7 @@ class Logpoint:
 
         for alert in alerts['rows']:
             wrapper = {
-                'name': alert['title'] + ' ' + alert['id'],
+                'name': alert['title'],
                 'details': alert['des'],
                 'risk': alert['risk'],
                 'date': alert['date'],
